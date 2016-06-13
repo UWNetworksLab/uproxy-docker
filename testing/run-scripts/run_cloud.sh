@@ -188,4 +188,10 @@ if ! docker ps -a | grep uproxy-sshd >/dev/null; then
   fi
 fi
 
+echo "CLOUD_INSTALL_PROGRESS 95"
+
+sh ./serve-zork-metrics.sh
+
+docker run -d -p 9090:9090 --add-host zork:$HOST_IP -v $PWD/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000
+
 echo "CLOUD_INSTALL_PROGRESS 100"
