@@ -11,8 +11,6 @@ set -e
 
 source "${BASH_SOURCE%/*}/utils.sh" || (echo "cannot find utils.sh" && exit 1)
 
-GIT=false
-BRANCH=
 PREBUILT=
 VNC=false
 KEEP=false
@@ -22,10 +20,8 @@ PROXY_PORT=9999
 CONTAINER_PREFIX="uproxy"
 
 function usage () {
-  echo "$0 [-g] [-b branch] [-p path] [-v] [-k] [-m mtu] [-l latency] [-s port] [-u prefix] browserspec browserspec"
-  echo "  -g: pull code from git (conflicts with -p)"
-  echo "  -b: git branch to pull (default: HEAD's referant)"
-  echo "  -p: use a pre-built uproxy-lib (conflicts with -g)"
+  echo "$0 [-p path] [-v] [-k] [-m mtu] [-l latency] [-s port] [-u prefix] browserspec browserspec"
+  echo "  -p: path to uproxy repo"
   echo "  -v: enable VNC on containers.  They will be ports 5900 and 5901."
   echo "  -k: KEEP containers after last process exits.  This is docker's --rm."
   echo "  -m MTU: set the MTU on the getter's network interface."
@@ -41,10 +37,8 @@ function usage () {
 }
 
 # TODO: replace browser-version with a Docker image name, ala run_cloud.sh
-while getopts gb:p:kvr:m:l:s:u:h? opt; do
+while getopts p:kvr:m:l:s:u:h? opt; do
   case $opt in
-    g) GIT=true ;;
-    b) BRANCH="$OPTARG" ;;
     p) PREBUILT="$OPTARG" ;;
     k) KEEP=true ;;
     v) VNC=true ;;
@@ -56,18 +50,6 @@ while getopts gb:p:kvr:m:l:s:u:h? opt; do
   esac
 done
 shift $((OPTIND-1))
-
-if [ "$GIT" = true ] && [ "$PREBUILT" = true ]
-then
-  echo "cannot use both -g and -p"
-  usage
-fi
-
-if [ -n "$BRANCH" ] && [ "$GIT" = false ]
-then
-  echo "-g must be used when -b is used"
-  usage
-fi
 
 if [ $# -lt 2 ]
 then
@@ -103,7 +85,7 @@ function run_docker () {
   fi
   if [ ! -z "$PREBUILT" ]
   then
-    HOSTARGS="$HOSTARGS -v $PREBUILT:/test/src/uproxy-lib"
+    HOSTARGS="$HOSTARGS -v $PREBUILT/build/dev/uproxy/lib/samples:/test/zork"
   fi
   docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME /sbin/my_init -- /test/bin/load-zork.sh $RUNARGS
 }
@@ -111,17 +93,11 @@ function run_docker () {
 run_docker $CONTAINER_PREFIX-getter $1 $VNCOPTS1 -p :9000 -p $PROXY_PORT:9999
 run_docker $CONTAINER_PREFIX-giver $2 $VNCOPTS2 -p :9000
 
-CONTAINER_IP=localhost
-if uname|grep Darwin > /dev/null
-then
-  CONTAINER_IP=`docker-machine ip default`
-fi
-
 GETTER_COMMAND_PORT=`docker port $CONTAINER_PREFIX-getter 9000|cut -d':' -f2`
 GIVER_COMMAND_PORT=`docker port $CONTAINER_PREFIX-giver 9000|cut -d':' -f2`
 
 echo -n "Waiting for getter to come up"
-while ! ((echo ping ; sleep 0.5) | nc -w 1 $CONTAINER_IP $GETTER_COMMAND_PORT | grep ping) > /dev/null; do echo -n .; done
+while ! ((echo ping ; sleep 0.5) | nc -w 1 localhost $GETTER_COMMAND_PORT | grep ping) > /dev/null; do echo -n .; done
 echo
 
 if [ -n "$MTU" ]
@@ -135,12 +111,12 @@ then
 fi
 
 echo -n "Waiting for giver to come up"
-while ! ((echo ping ; sleep 0.5) | nc -w 1 $CONTAINER_IP $GIVER_COMMAND_PORT | grep ping) > /dev/null; do echo -n .; done
+while ! ((echo ping ; sleep 0.5) | nc -w 1 localhost $GIVER_COMMAND_PORT | grep ping) > /dev/null; do echo -n .; done
 echo
 
 echo "Connecting pair..."
 sleep 2 # make sure nc is shutdown
-./connect-pair.py $CONTAINER_IP $GETTER_COMMAND_PORT $CONTAINER_IP $GIVER_COMMAND_PORT
+./connect-pair.py localhost $GETTER_COMMAND_PORT localhost $GIVER_COMMAND_PORT
 
 echo "SOCKS proxy should be available, sample command:"
-echo "  curl -x socks5h://$CONTAINER_IP:$PROXY_PORT www.example.com"
+echo "  curl -x socks5h://localhost:$PROXY_PORT www.example.com"
