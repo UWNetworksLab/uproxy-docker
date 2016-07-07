@@ -190,8 +190,18 @@ fi
 
 echo "CLOUD_INSTALL_PROGRESS 95"
 
-sh ./serve-zork-metrics.sh
+# Boot monitoring servers and metrics.
 
-docker run -d -p 9090:9090 --add-host zork:$HOST_IP -v $PWD/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000
+if netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".8000"' >/dev/null; then
+  sh ./serve-zork-metrics.sh
+fi
+
+if ! docker ps -a | grep prom/prometheus >/dev/null; then
+  docker run -d -p 9090:9090 --add-host zork:$HOST_IP -v $PWD/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000
+fi
+
+if netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".9100"' >/dev/null; then
+  sh ./start-node-exporter.sh > /tmp/node-exporter.out &
+fi
 
 echo "CLOUD_INSTALL_PROGRESS 100"
