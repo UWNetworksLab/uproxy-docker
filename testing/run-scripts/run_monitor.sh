@@ -1,4 +1,3 @@
-
 # Boot monitoring servers and metrics.
 
 if netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".8000"' >/dev/null; then
@@ -6,6 +5,7 @@ if netstat -lnt | awk '$6 == "LISTEN" && $4 ~ ".8000"' >/dev/null; then
 fi
 
 if ! docker ps -a | grep prom/prometheus >/dev/null; then
+  HOST_IP=`ip -o -4 addr list docker0 | awk '{print $4}' | cut -d/ -f1`
   docker run -d -p 9090:9090 --add-host zork:$HOST_IP -v $PWD/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -storage.local.memory-chunks=10000
 fi
 
