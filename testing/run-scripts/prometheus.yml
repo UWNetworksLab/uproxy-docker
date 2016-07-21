@@ -4,18 +4,18 @@ scrape_configs:
   # Scrape Prometheus itself every 5 seconds.
   - job_name: 'prometheus'
     scrape_interval: 5s
-    target_groups:
+    static_configs:
       - targets: ['localhost:9090']
 
   # Get information from zork
   - job_name: 'zork'
     scrape_interval: 5s
-    target_groups:
+    static_configs:
       - targets: ['zork:8000']
 
   # Scrape the Node Exporter every 5 seconds.
   - job_name: 'node'
     scrape_interval: 5s
-    target_groups:
+    static_configs:
       - targets: ['zork:9100']
 

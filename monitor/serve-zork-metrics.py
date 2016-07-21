@@ -4,7 +4,7 @@ import telnetlib
 
 tn = telnetlib.Telnet("zork", "9000")
 
-getters_gauge = Gauge('number_of_getters', 'Number of uProxy instances connected to this cloud instance.')
+getters_gauge = Gauge('zork_getters', 'Number of uProxy instances connected to this cloud instance.')
 
 def update_getters_count():
   try:
@@ -14,9 +14,9 @@ def update_getters_count():
     return
   zork_output = tn.read_some()
   # Remove new line character from output and cast to int
-  num_of_getters = int(zork_output[:len(zork_output)-1])
+  zork_getters = int(zork_output[:len(zork_output)-1])
 
-  getters_gauge.set(num_of_getters)
+  getters_gauge.set(zork_getters)
 
 if __name__ == '__main__':
     # Start up the server to expose the metrics.
