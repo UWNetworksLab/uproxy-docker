@@ -8,6 +8,9 @@
 
 set -e
 
+
+echo "This file is zorkkk statsss"
+
 function usage () {
   echo "$0 [-h] logfile"
   exit 1

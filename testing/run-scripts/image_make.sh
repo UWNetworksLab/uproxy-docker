@@ -4,6 +4,8 @@ set -e
 
 PREBUILT=
 
+echo "image make was reached"
+
 function usage () {
   echo "$0 [-p] [-h] browser version"
   echo "  -p: path to uproxy repo"
@@ -31,13 +33,15 @@ VERSION=$2
 
 TMP_DIR=`mktemp -d`
 
+echo "building image in $TMP_DIR"
+
 cp -R ${BASH_SOURCE%/*}/../integration/test $TMP_DIR/test
 
 cat <<EOF > $TMP_DIR/Dockerfile
-FROM phusion/baseimage:0.9.19
+FROM resin/rpi-raspbian:latest
 
-RUN apt-get -qq update
-RUN apt-get -qq install wget unzip bzip2 supervisor iptables unattended-upgrades
+RUN apt-get update --fix-missing
+RUN apt-get install -y curl supervisor iptables unattended-upgrades
 
 RUN mkdir /test
 COPY test /test

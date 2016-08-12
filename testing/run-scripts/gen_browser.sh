@@ -12,11 +12,13 @@ source "${BASH_SOURCE%/*}/utils.sh" || (echo "cannot find utils.sh" && exit 1)
 
 # $1 is the version
 function get_chrome () {
-  DRIVERURL=https://chromedriver.storage.googleapis.com/$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
   
   case $1 in
     stable)
-      URL=https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      URL=https://dl.dropboxusercontent.com/u/87113035/chromium_browser_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb
+      ;;
+    arm)
+      URL=https://dl.dropboxusercontent.com/u/87113035/chromium_browser_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb
       ;;
     beta)
       URL=https://dl.google.com/linux/direct/google-chrome-beta_current_amd64.deb
@@ -30,9 +32,8 @@ function get_chrome () {
       ;;
   esac
   cat <<EOF
+RUN apt-get install -qq wget
 RUN echo BROWSER=chrome >/etc/test.conf
-ADD $DRIVERURL /tmp/driver.zip
-RUN unzip -qq /tmp/driver.zip -d /usr/bin
 RUN wget $URL -O /tmp/chrome.deb
 RUN dpkg -i /tmp/chrome.deb || apt-get -f install -y
 EOF
@@ -67,6 +68,8 @@ RUN echo BROWSER=firefox >/etc/test.conf
 # jpm requires Node.js.
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 RUN apt-get install -y nodejs
+RUN apt-get install -y wget
+RUN apt-get install -y lbzip2
 RUN npm install -g jpm
 
 # Firefox dependencies (apt-get install -f handles this for Chrome).
@@ -76,16 +79,28 @@ EOF
     stable)
       cat <<EOF
 RUN cd /tmp ; mkdir ff ; cd ff ; wget -O firefox-stable.tar.bz2 'https://download.mozilla.org/?product=firefox-latest&os=linux64'
+RUN cd /usr/share ; ls /tmp/ff/*.bz2|sort|tail -1|xargs tar xf
+RUN ln -s /usr/share/firefox/firefox /usr/bin/firefox
 EOF
             ;;
+    arm)
+      cat <<EOF
+RUN cd /tmp ; mkdir ff ; cd ff ; apt-get install firefox-esr
+EOF
+            ;;
+
         beta)
             cat <<EOF
 RUN cd /tmp ; mkdir ff ; cd ff ; wget -O firefox-beta.tar.bz2 'https://download.mozilla.org/?product=firefox-beta-latest&os=linux64'
+RUN cd /usr/share ; ls /tmp/ff/*.bz2|sort|tail -1|xargs tar xf
+RUN ln -s /usr/share/firefox/firefox /usr/bin/firefox
 EOF
       ;;
     canary)
       cat <<EOF
 RUN cd /tmp ; mkdir ff ; cd ff ; wget -r -l1 -nd -A '*linux-x86_64.tar.bz2' https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora/
+RUN cd /usr/share ; ls /tmp/ff/*.bz2|sort|tail -1|xargs tar xf
+RUN ln -s /usr/share/firefox/firefox /usr/bin/firefox
 EOF
       ;;
     *)

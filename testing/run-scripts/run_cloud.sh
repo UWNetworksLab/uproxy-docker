@@ -22,6 +22,8 @@ AUTOMATED=false
 
 SSHD_PORT=5000
 
+echo "This file is run_cloud.sh"
+
 function usage () {
   echo "$0 [-p path] [-z zork_image] [-s sshd_image] [-i invite code] [-u] [-w] [-d ip] [-b banner] [-a]"
   echo "  -p: path to uproxy repo"

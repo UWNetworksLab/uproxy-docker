@@ -19,6 +19,8 @@ LATENCY=
 PROXY_PORT=9999
 CONTAINER_PREFIX="uproxy"
 
+echo "current file is run pair"
+
 function usage () {
   echo "$0 [-p path] [-v] [-k] [-m mtu] [-l latency] [-s port] [-u prefix] browserspec browserspec"
   echo "  -p: path to uproxy repo"
@@ -87,13 +89,18 @@ function run_docker () {
   then
     HOSTARGS="$HOSTARGS -v $PREBUILT/build/dev/uproxy/lib/samples:/test/zork"
   fi
-  docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME /sbin/my_init -- /test/bin/load-zork.sh $RUNARGS
+  echo "the at thing is $@"
+  docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME  /test/bin/load-zork.sh $RUNARGS
+  echo 'the run executed'
 }
 
 run_docker $CONTAINER_PREFIX-getter $1 $VNCOPTS1 -p :9000 -p $PROXY_PORT:9999
+echo "this executed"
 run_docker $CONTAINER_PREFIX-giver $2 $VNCOPTS2 -p :9000
 
+echo 'part 1'
 GETTER_COMMAND_PORT=`docker port $CONTAINER_PREFIX-getter 9000|cut -d':' -f2`
+echo 'part 2'
 GIVER_COMMAND_PORT=`docker port $CONTAINER_PREFIX-giver 9000|cut -d':' -f2`
 
 echo -n "Waiting for getter to come up"

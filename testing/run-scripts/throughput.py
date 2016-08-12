@@ -24,7 +24,7 @@ flood_ip = subprocess.check_output(['./flood.sh', str(FLOOD_SIZE_MB) + 'M'],
 print('** flood server: ' + flood_ip)
 
 browsers = ['chrome', 'firefox']
-versions = ['stable', 'beta', 'canary']
+versions = ['stable', 'arm', 'beta', 'canary']
 
 # Run the benchmarks.
 throughput = {}
