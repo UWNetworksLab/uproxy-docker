@@ -114,10 +114,9 @@ EOF
   # In the absence of an FTP server, we use wget to mirror that directory's
   # immediate children so that we can figure out the latest build's directory.
   # Note that this can be slow when there are a lot of nightly builds.
-  readonly TMP=`mktemp -d`
+  readonly TMP=$(mktemp -d)
   wget -r -np -l 1 -nH --cut-dirs=4 -P $TMP $NIGHTLY_TOP_LEVEL
-  readonly LATEST_NIGHTLY_WITH_LOCAL_PATHS=`find $TMP -mindepth 1 -maxdepth 1 -type d|sort|tail -1`
-  readonly LATEST_NIGHTLY=`basename $LATEST_NIGHTLY_WITH_LOCAL_PATHS`
+  readonly LATEST_NIGHTLY=$(basename $(find $TMP -mindepth 1 -maxdepth 1 -type d|sort|tail -1))
 
   cat <<EOF
 RUN cd /tmp ; mkdir ff ; cd ff ; wget -r -l1 -nd -A '*add-on-devel.tar.bz2' $NIGHTLY_TOP_LEVEL/$LATEST_NIGHTLY/
