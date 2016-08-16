@@ -87,7 +87,7 @@ function run_docker () {
   fi
   if [ ! -z "$PREBUILT" ]
   then
-    HOSTARGS="$HOSTARGS -v $PREBUILT/build/dev/uproxy/lib/samples:/test/zork"
+    HOSTARGS="$HOSTARGS -v $PREBUILT/build/src/lib/samples:/test/zork"
   fi
   echo "the at thing is $@"
   docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME  /test/bin/load-zork.sh $RUNARGS
