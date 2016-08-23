@@ -79,7 +79,7 @@ function run_docker () {
   local NAME=$1
   local IMAGE=$2
   shift; shift
-  IMAGENAME=uproxy/$IMAGE
+  IMAGENAME=elewis97/$IMAGE
   local HOSTARGS=
   if $KEEP
   then
@@ -89,7 +89,7 @@ function run_docker () {
   then
     HOSTARGS="$HOSTARGS -v $PREBUILT/build/src/lib/samples:/test/zork"
   fi
-  echo "the at thing is $@"
+  echo "the image is $IMAGE"
   docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME  /test/bin/load-zork.sh $RUNARGS
   echo 'the run executed'
 }

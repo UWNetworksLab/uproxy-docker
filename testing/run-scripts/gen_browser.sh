@@ -20,7 +20,7 @@ function get_chrome () {
     arm)
     cat <<EOF
 RUN apt-get install wget
-RUN echo BROWSER=chrome >/etc/test.conf
+RUN echo BROWSER=chromium >/etc/test.conf
 RUN wget https://dl.dropboxusercontent.com/u/87113035/chromium-browser-l10n_45.0.2454.85-0ubuntu0.15.04.1.1181_all.deb 
 RUN wget https://dl.dropboxusercontent.com/u/87113035/chromium-browser_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb 
 RUN wget https://dl.dropboxusercontent.com/u/87113035/chromium-codecs-ffmpeg-extra_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb 
@@ -74,7 +74,10 @@ RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 RUN apt-get install -y nodejs
 RUN apt-get install -y wget
 RUN apt-get install -y lbzip2
-RUN npm install -g jpm
+RUN apt-get install npm || apt-get install -f
+RUN apt-get install -qq nodejs
+RUN apt-get install -qq nodejs-legacy
+RUN npm install jpm -g
 
 # Firefox dependencies (apt-get install -f handles this for Chrome).
 RUN apt-get -qq install libasound2 libdbus-glib-1-2 libgtk2.0.0 libgtk-3-0
@@ -126,9 +129,8 @@ EOF
   readonly LATEST_NIGHTLY=$(basename $(find $TMP -mindepth 1 -maxdepth 1 -type d|sort|tail -1))
 
   cat <<EOF
-RUN cd /tmp ; mkdir ff ; cd ff ; wget -r -l1 -nd -A '*add-on-devel.tar.bz2' $NIGHTLY_TOP_LEVEL/$LATEST_NIGHTLY/
-RUN cd /usr/share ; tar xf /tmp/ff/*add-on-devel.tar.bz2
-RUN ln -s /usr/share/firefox/firefox /usr/bin/firefox
+RUN cd /tmp ; mkdir ff ; cd ff ; wget -O firefox.deb 'http://security.debian.org/debian-security/pool/updates/main/f/firefox-esr/firefox-esr_45.3.0esr-1~deb8u1_armhf.deb'
+RUN dpkg -i /tmp/ff/firefox.deb || apt-get install -f
 EOF
 }
 
