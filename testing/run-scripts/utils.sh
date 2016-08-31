@@ -34,7 +34,6 @@ function chrome_build_path () {
 function docker_run_args () {
   local FULL_IMAGE_NAME=$1
   shift
-  bleh bleh bleh
   local IMAGE=$(echo $FULL_IMAGE_NAME | cut -d / -f 2)
   local BROWSER=$(echo $IMAGE | cut -d - -f 1)
   local VERSION=$(echo $IMAGE | cut -d - -f 2)

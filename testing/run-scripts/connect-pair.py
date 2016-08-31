@@ -37,15 +37,9 @@ giver.sendall('give\n')
 getterOpen = True
 giverOpen = True
 while getterOpen and giverOpen:
-  print getter
-  print giver
   inready, outready, exceptready = select.select([getter, giver], [], [])
-  print inready
   for s in inready:
-    print "another infinite loop"
     raw = s.recv(16384)
-    print "Length of raw: " + str(len(raw))
-    print s == getter
     if len(raw) < 1:
       if s == getter:
         getterOpen = False
@@ -53,7 +47,6 @@ while getterOpen and giverOpen:
         giverOpen = False
     else:
       for signal in raw.splitlines():
-        print signal
         if s == getter:
           giver.sendall(signal + '\n')
         else:

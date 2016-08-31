@@ -3,6 +3,7 @@
 set -e
 
 PREBUILT=
+ARM=false
 
 echo "image make was reached"
 
@@ -10,14 +11,16 @@ function usage () {
   echo "$0 [-p] [-h] browser version"
   echo "  -p: path to uproxy repo"
   echo "  -h, -?: this help message"
+  echo "  -a: ARM architecture"
   echo
   echo "If -p is not specified then -p must be passed to run_cloud.sh and run_pair.sh."
   exit 1;
 }
 
-while getopts p:h? opt; do
+while getopts p:h:a? opt; do
   case $opt in
     p) PREBUILT="$OPTARG" ;;
+    a) ARM=true ;;
     *) usage ;;
   esac
 done
@@ -35,13 +38,25 @@ TMP_DIR=`mktemp -d`
 
 echo "building image in $TMP_DIR"
 
+
 cp -R ${BASH_SOURCE%/*}/../integration/test $TMP_DIR/test
-
 cat <<EOF > $TMP_DIR/Dockerfile
+EOF
+if $ARM
+then
+echo "arm was true"
+cat <<EOF
 FROM resin/rpi-raspbian:latest
+EOF
+else 
+cat <<EOF
+FROM phusion/baseimage:0.9.19
+EOF
+fi
 
+cat<<EOF
 RUN apt-get update --fix-missing
-RUN apt-get install -y curl supervisor iptables unattended-upgrades
+RUN apt-get install -y curl supervisor iptables unattended-upgrades wget
 
 RUN mkdir /test
 COPY test /test
