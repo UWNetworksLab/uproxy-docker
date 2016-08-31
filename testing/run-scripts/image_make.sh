@@ -40,23 +40,14 @@ echo "building image in $TMP_DIR"
 
 
 cp -R ${BASH_SOURCE%/*}/../integration/test $TMP_DIR/test
-cat <<EOF > $TMP_DIR/Dockerfile
-EOF
+
 if $ARM
 then
-echo "arm was true"
-cat <<EOF
+  cat <<EOF > $TMP_DIR/Dockerfile
 FROM resin/rpi-raspbian:latest
-EOF
-else 
-cat <<EOF
-FROM phusion/baseimage:0.9.19
-EOF
-fi
 
-cat<<EOF
-RUN apt-get update --fix-missing
-RUN apt-get install -y curl supervisor iptables unattended-upgrades wget
+RUN apt-get -qq update
+RUN apt-get -qq install wget unzip bzip2 supervisor iptables unattended-upgrades
 
 RUN mkdir /test
 COPY test /test
@@ -64,6 +55,20 @@ COPY test /test
 EXPOSE 9000
 EXPOSE 9999
 EOF
+else
+  cat <<EOF > $TMP_DIR/Dockerfile
+FROM phusion/baseimage:0.9.19
+
+RUN apt-get -qq update
+RUN apt-get -qq install wget unzip bzip2 supervisor iptables unattended-upgrades
+
+RUN mkdir /test
+COPY test /test
+
+EXPOSE 9000
+EXPOSE 9999
+EOF
+fi
 
 # Chrome and Firefox need X.
 if [ "$BROWSER" = "chrome" ] || [ "$BROWSER" = "firefox" ]

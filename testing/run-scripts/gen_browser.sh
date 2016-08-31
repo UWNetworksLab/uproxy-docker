@@ -65,10 +65,9 @@ RUN echo BROWSER=firefox >/etc/test.conf
 
 # jpm requires Node.js.
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
-RUN apt-get install -y lbzip2
 RUN apt-get install npm || apt-get install -f
 RUN apt-get install -qq nodejs
-RUN apt-get install -qq nodejs-legacy
+RUN apt-get install -qq nodejs-legacy || apt-get install -f
 RUN npm install jpm -g
 
 # Firefox dependencies (apt-get install -f handles this for Chrome).
@@ -100,30 +99,42 @@ EOF
   #   http://archive.mozilla.org/pub/firefox/tinderbox-builds/mozilla-beta-linux64-add-on-devel/
   case $1 in
     stable)
-      readonly NIGHTLY_TAG=release
-      ;;
-    beta)
-       readonly NIGHTLY_TAG=beta
-      ;;
-    *)
-      log "Unknown firefox version $1. Options are stable and beta."
-      ;;
-  esac
-  readonly NIGHTLY_TOP_LEVEL=http://archive.mozilla.org/pub/firefox/tinderbox-builds/mozilla-$NIGHTLY_TAG-linux64-add-on-devel/
-
   # Inside this directory we'll find a bunch of directories, each containing a
   # nightly build. We want to find the *last*. This will be the *most recent*.
   # In the absence of an FTP server, we use wget to mirror that directory's
   # immediate children so that we can figure out the latest build's directory.
   # Note that this can be slow when there are a lot of nightly builds.
-  readonly TMP=$(mktemp -d)
-  wget -r -np -l 1 -nH --cut-dirs=4 -P $TMP $NIGHTLY_TOP_LEVEL
-  readonly LATEST_NIGHTLY=$(basename $(find $TMP -mindepth 1 -maxdepth 1 -type d|sort|tail -1))
-
-  cat <<EOF
+      readonly TMP=$(mktemp -d)
+      readonly NIGHTLY_TOP_LEVEL=http://archive.mozilla.org/pub/firefox/tinderbox-builds/mozilla-release-linux64-add-on-devel/
+      wget -r -np -l 1 -nH --cut-dirs=4 -P $TMP $NIGHTLY_TOP_LEVEL
+      readonly LATEST_NIGHTLY=$(basename $(find $TMP -mindepth 1 -maxdepth 1 -type d|sort|tail -1))
+      cat <<EOF
+RUN cd /tmp ; mkdir ff ; cd ff ; wget -r -l1 -nd -A '*add-on-devel.tar.bz2' $NIGHTLY_TOP_LEVEL/$LATEST_NIGHTLY/
+RUN cd /usr/share ; tar xf /tmp/ff/*add-on-devel.tar.bz2
+RUN ln -s /usr/share/firefox/firefox /usr/bin/firefox
+EOF
+      ;;
+    beta)
+      readonly TMP=$(mktemp -d)
+      readonly NIGHTLY_TOP_LEVEL=http://archive.mozilla.org/pub/firefox/tinderbox-builds/mozilla-beta-linux64-add-on-devel/
+      wget -r -np -l 1 -nH --cut-dirs=4 -P $TMP $NIGHTLY_TOP_LEVEL
+      readonly LATEST_NIGHTLY=$(basename $(find $TMP -mindepth 1 -maxdepth 1 -type d|sort|tail -1))
+      cat <<EOF
+RUN cd /tmp ; mkdir ff ; cd ff ; wget -r -l1 -nd -A '*add-on-devel.tar.bz2' $NIGHTLY_TOP_LEVEL/$LATEST_NIGHTLY/
+RUN cd /usr/share ; tar xf /tmp/ff/*add-on-devel.tar.bz2
+RUN ln -s /usr/share/firefox/firefox /usr/bin/firefox
+EOF
+      ;;
+    arm)
+      cat <<EOF
 RUN cd /tmp ; mkdir ff ; cd ff ; wget -O firefox.deb 'http://security.debian.org/debian-security/pool/updates/main/f/firefox-esr/firefox-esr_45.3.0esr-1~deb8u1_armhf.deb'
 RUN dpkg -i /tmp/ff/firefox.deb || apt-get install -f
 EOF
+      ;;
+    *)
+      log "Unknown firefox version $1. Options are stable and beta."
+      ;;
+  esac
 }
 
 function get_node () {
