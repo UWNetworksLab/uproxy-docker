@@ -3,19 +3,22 @@
 set -e
 
 PREBUILT=
+RPI=false
 
 function usage () {
   echo "$0 [-p] [-h] browser version"
   echo "  -p: path to uproxy repo"
   echo "  -h, -?: this help message"
+  echo "  -r: Raspberry Pi ARM architecture"
   echo
   echo "If -p is not specified then -p must be passed to run_cloud.sh and run_pair.sh."
   exit 1;
 }
 
-while getopts p:h? opt; do
+while getopts p:h:a? opt; do
   case $opt in
     p) PREBUILT="$OPTARG" ;;
+    a) RPI=true ;;
     *) usage ;;
   esac
 done
@@ -31,9 +34,27 @@ VERSION=$2
 
 TMP_DIR=`mktemp -d`
 
+echo "building image in $TMP_DIR"
+
+
 cp -R ${BASH_SOURCE%/*}/../integration/test $TMP_DIR/test
 
-cat <<EOF > $TMP_DIR/Dockerfile
+if $RPI
+then
+  cat <<EOF > $TMP_DIR/Dockerfile
+FROM resin/rpi-raspbian:latest
+
+RUN apt-get -qq update
+RUN apt-get -qq install wget unzip bzip2 supervisor iptables unattended-upgrades
+
+RUN mkdir /test
+COPY test /test
+
+EXPOSE 9000
+EXPOSE 9999
+EOF
+else
+  cat <<EOF > $TMP_DIR/Dockerfile
 FROM phusion/baseimage:0.9.19
 
 RUN apt-get -qq update
@@ -45,6 +66,7 @@ COPY test /test
 EXPOSE 9000
 EXPOSE 9999
 EOF
+fi
 
 # Chrome and Firefox need X.
 if [ "$BROWSER" = "chrome" ] || [ "$BROWSER" = "firefox" ]
@@ -66,4 +88,4 @@ fi
 
 ./gen_browser.sh "$@" >> $TMP_DIR/Dockerfile
 
-docker build -t uproxy/$BROWSER-$VERSION $TMP_DIR
+docker build -t elewis97/$BROWSER-$VERSION $TMP_DIR

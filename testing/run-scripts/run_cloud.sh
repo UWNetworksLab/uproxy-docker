@@ -19,6 +19,7 @@ WIPE=false
 PUBLIC_IP=
 BANNER=
 AUTOMATED=false
+RPI=false
 
 SSHD_PORT=5000
 
@@ -34,6 +35,7 @@ function usage () {
   echo "  -b: name to use in contacts list"
   echo "  -a: do not output complete invite URL"
   echo "  -h, -?: this help message"
+  echo "  -r: Raspberry Pi ARM architecture"
   exit 1
 }
 
@@ -48,6 +50,7 @@ while getopts p:z:s:i:uwd:b:ah? opt; do
     d) PUBLIC_IP="$OPTARG" ;;
     b) BANNER="$OPTARG" ;;
     a) AUTOMATED=true ;;
+    r) RPI=true ;;
     *) usage ;;
   esac
 done
@@ -139,7 +142,12 @@ if ! docker ps -a | grep uproxy-zork >/dev/null; then
   # NET_ADMIN is required to run iptables inside the container.
   # Full list of capabilities:
   #   https://docs.docker.com/engine/reference/run/#runtime-privilege-linux-capabilities-and-lxc-configuration
-  docker run --restart=always --net=host --cap-add NET_ADMIN $HOSTARGS --name uproxy-zork -d $ZORK_IMAGE /sbin/my_init -- /test/bin/load-zork.sh -z
+  if $RPI
+  then
+    docker run --restart=always --net=host --cap-add NET_ADMIN $HOSTARGS --name uproxy-zork -d $ZORK_IMAGE /test/bin/load-zork.sh -z
+  else
+    docker run --restart=always --net=host --cap-add NET_ADMIN $HOSTARGS --name uproxy-zork -d $ZORK_IMAGE /sbin/my_init -- /test/bin/load-zork.sh -z
+  fi
 
   echo -n "Waiting for Zork to come up..."
   echo "CLOUD_INSTALL_STATUS_WAITING_FOR_UPROXY"
