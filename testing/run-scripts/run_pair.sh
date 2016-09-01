@@ -19,8 +19,6 @@ LATENCY=
 PROXY_PORT=9999
 CONTAINER_PREFIX="uproxy"
 
-echo "current file is run pair"
-
 function usage () {
   echo "$0 [-p path] [-v] [-k] [-m mtu] [-l latency] [-s port] [-u prefix] browserspec browserspec"
   echo "  -p: path to uproxy repo"

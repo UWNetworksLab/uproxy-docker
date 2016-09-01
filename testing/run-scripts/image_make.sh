@@ -5,8 +5,6 @@ set -e
 PREBUILT=
 ARM=false
 
-echo "image make was reached"
-
 function usage () {
   echo "$0 [-p] [-h] browser version"
   echo "  -p: path to uproxy repo"
@@ -82,7 +80,7 @@ fi
 if [ -n "$PREBUILT" ]
 then
   mkdir $TMP_DIR/zork
-  cp -R $PREBUILT/build/dev/uproxy/lib/samples/zork-* $TMP_DIR/zork
+  cp -R $PREBUILT/build/src/lib/samples/zork-* $TMP_DIR/zork
   cat <<EOF >> $TMP_DIR/Dockerfile
 COPY zork /test/zork/
 EOF

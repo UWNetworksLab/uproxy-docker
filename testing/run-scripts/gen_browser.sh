@@ -13,9 +13,11 @@ source "${BASH_SOURCE%/*}/utils.sh" || (echo "cannot find utils.sh" && exit 1)
 # $1 is the version
 function get_chrome () {
   
+  DRIVERURL=https://chromedriver.storage.googleapis.com/$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
+
   case $1 in
     stable)
-      URL=https://dl.dropboxusercontent.com/u/87113035/chromium_browser_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb
+      URL=https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
       ;;
     beta)
       URL=https://dl.google.com/linux/direct/google-chrome-beta_current_amd64.deb
