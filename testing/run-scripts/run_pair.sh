@@ -18,6 +18,7 @@ MTU=
 LATENCY=
 PROXY_PORT=9999
 CONTAINER_PREFIX="uproxy"
+RPI=false
 
 function usage () {
   echo "$0 [-p path] [-v] [-k] [-m mtu] [-l latency] [-s port] [-u prefix] browserspec browserspec"
@@ -29,6 +30,7 @@ function usage () {
   echo "  -s port: forwarding port for the proxy on the host.  Default is 9999."
   echo "  -u prefix: prefix for getter and giver container names.  Default is uproxy."
   echo "  -h, -?: this help message."
+  echo "  -r: Raspberry Pi ARM architecture"
   echo
   echo "browserspec is a pair of browser-version."
   echo "  Valid browsers are firefox and chrome, valid versions "
@@ -46,6 +48,7 @@ while getopts p:kvr:m:l:s:u:h? opt; do
     l) LATENCY="$OPTARG" ;;
     s) PROXY_PORT="$OPTARG" ;;
     u) CONTAINER_PREFIX="$OPTARG" ;;
+    r) RPI=true;
     *) usage ;;
   esac
 done
@@ -87,18 +90,18 @@ function run_docker () {
   then
     HOSTARGS="$HOSTARGS -v $PREBUILT/build/src/lib/samples:/test/zork"
   fi
-  echo "the image is $IMAGE"
-  docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME  /test/bin/load-zork.sh $RUNARGS
-  echo 'the run executed'
+  if $RPI
+  then
+    docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME  /test/bin/load-zork.sh $RUNARGS
+  else 
+    docker run $HOSTARGS $@ --name $NAME $(docker_run_args $IMAGENAME) -d $IMAGENAME sbin/my_init -- /test/bin/load-zork.sh $RUNARGS
+  fi
 }
 
 run_docker $CONTAINER_PREFIX-getter $1 $VNCOPTS1 -p :9000 -p $PROXY_PORT:9999
-echo "this executed"
 run_docker $CONTAINER_PREFIX-giver $2 $VNCOPTS2 -p :9000
 
-echo 'part 1'
 GETTER_COMMAND_PORT=`docker port $CONTAINER_PREFIX-getter 9000|cut -d':' -f2`
-echo 'part 2'
 GIVER_COMMAND_PORT=`docker port $CONTAINER_PREFIX-giver 9000|cut -d':' -f2`
 
 echo -n "Waiting for getter to come up"

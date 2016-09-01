@@ -3,13 +3,13 @@
 set -e
 
 PREBUILT=
-ARM=false
+RPI=false
 
 function usage () {
   echo "$0 [-p] [-h] browser version"
   echo "  -p: path to uproxy repo"
   echo "  -h, -?: this help message"
-  echo "  -a: ARM architecture"
+  echo "  -r: Raspberry Pi ARM architecture"
   echo
   echo "If -p is not specified then -p must be passed to run_cloud.sh and run_pair.sh."
   exit 1;
@@ -18,7 +18,7 @@ function usage () {
 while getopts p:h:a? opt; do
   case $opt in
     p) PREBUILT="$OPTARG" ;;
-    a) ARM=true ;;
+    a) RPI=true ;;
     *) usage ;;
   esac
 done
@@ -39,7 +39,7 @@ echo "building image in $TMP_DIR"
 
 cp -R ${BASH_SOURCE%/*}/../integration/test $TMP_DIR/test
 
-if $ARM
+if $RPI
 then
   cat <<EOF > $TMP_DIR/Dockerfile
 FROM resin/rpi-raspbian:latest
