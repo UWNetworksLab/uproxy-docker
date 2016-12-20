@@ -11,7 +11,7 @@
 
 set -e
 
-REQUIRED_COMMANDS="docker git nc"
+REQUIRED_COMMANDS="docker git nc ip"
 
 AUTOMATED=false
 KEY=
